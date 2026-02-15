@@ -1,7 +1,7 @@
 """
 米游社功能函数 - 游戏角色信息获取
-注意：凭证（gameroles是stoken，便笺是ltoken_v2和cookie_token_v2等等一系列其余cookies
-目前看来崩铁对ds验证非常严格，没找到对应salt，一直返回10001（非法请求），希望大佬能改进
+凭证需要自己获取（gameroles是stoken，实时便笺是ltoken_v2，cookie_token_v2等一系列cookie
+重大更新，修复ds2签名算法，现在能成功访问崩铁实时便笺（绝区零验证最松（ds都不看），原神其次，崩铁最严）
 """
 
 import json
@@ -34,11 +34,11 @@ class DSGenerator:
         return f"{t},{r},{sign}"
 
     @staticmethod
-    def generate_ds(param_type=3, body=None, query=""):  #便笺全部使用ds2签名
-        salt = "xV8v4Qu54lUKrEYFZkJhB8cuOh9Asafs"  #这个salt不确定，希望大佬能修改
+    def generate_ds(param_type=3, body=None, query=""):
+        salt = "xV8v4Qu54lUKrEYFZkJhB8cuOh9Asafs"
         
         t = int(time.time())
-        r = random.randint(100001,200000)  #api文档特别声明如果随机到100000要加542367，所以直接跳过100000
+        r = random.randint(100001, 200000)
         
         # 处理body
         b = ""
@@ -61,9 +61,11 @@ class DSGenerator:
                 sorted_params = sorted(params)
                 q = '&'.join(sorted_params)
         
-        # 构建签名字符串: salt + t + r + b + q
-        sign_str = f"{salt}{t}{r}{b}{q}"
+        # 修改点：构建新的签名字符串格式
+        sign_str = f"salt={salt}&t={t}&r={r}&b={b}&q={q}"
         sign = hashlib.md5(sign_str.encode('utf-8')).hexdigest()
+
+        print(f"{t},{r},{sign}")
         
         return f"{t},{r},{sign}"
 
@@ -832,7 +834,7 @@ def process_zzz_note_data(data: Dict) -> Dict:
         }
         processed['member_card_state_cn'] = card_map.get(state, state)
     
-    # 处理随便观经营
+    # 处理绳网经营
     if 'temple_running' in data:
         temple = data['temple_running']
         
@@ -1128,7 +1130,7 @@ def format_zzz_note(data: Dict) -> str:
         if refresh:
             lines.append(f"  刷新: {refresh}")
     
-    # 随便观经营
+    # 绳网经营
     temple = data.get('temple_running', {})
     if temple:
         exp_state = data.get('expedition_state_cn', '')
@@ -1138,7 +1140,7 @@ def format_zzz_note(data: Dict) -> str:
         currency = temple.get('current_currency', '0')
         currency_percent = data.get('currency_percent', 0)
         
-        lines.append(f"\n🏢 随便观经营")
+        lines.append(f"\n🏢 绳网经营")
         lines.append(f"  等级: {level}")
         if exp_state:
             lines.append(f"  探索: {exp_state}")
