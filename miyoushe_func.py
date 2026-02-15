@@ -37,7 +37,7 @@ class DSGenerator:
     def generate_ds(param_type=3, body=None, query=""):  #便笺全部使用ds2签名
         salt = "xV8v4Qu54lUKrEYFZkJhB8cuOh9Asafs"  #这个salt不确定，希望大佬能修改
         
-        t = str(int(time.time()))
+        t = int(time.time())
         r = random.randint(100001,200000)  #api文档特别声明如果随机到100000要加542367，所以直接跳过100000
         
         # 处理body
